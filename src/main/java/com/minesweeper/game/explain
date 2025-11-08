@@ -1,0 +1,11 @@
+model 只关心数据结构
+
+repository 只关心数据存储
+
+exception 只关心错误处理
+
+service 只关心业务逻辑（后面会讲到）
+
+controller 只关心请求处理
+
+mapper 只关心数据库连接

@@ -1,0 +1,22 @@
+server:
+  port: 8088
+
+# TODO: 这里修改成自己数据库的账号，Flyway要求连接的url必须指向目标数据库，所以也要修改url
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/minesweeper?useSSL=false&allowPublicKeyRetrieval=true&useServerPrepStmts=false&cachePrepStmts=true
+    username:
+    password:
+  flyway:
+    # 自动执行数据库迁移
+    enabled: true
+    # 新项目设置为false
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+
+mybatis:
+  configuration:
+    # 驼峰命名映射
+    map-underscore-to-camel-case: true
