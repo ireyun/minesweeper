@@ -1,4 +1,4 @@
 package com.minesweeper.game.controller;
 
-public class RoomService {
+public class UserController {
 }
