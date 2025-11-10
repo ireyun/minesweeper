@@ -72,10 +72,10 @@ public class GameController {
             APIResponse<GameStateResponse> response = APIResponse.success("操作成功", gameState);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            APIResponse<GameStateResponse> response = APIResponse.error(400, e.getMessage());
+            APIResponse<GameStateResponse> response = APIResponse.error(400, e.getMessage());//参数异常捕获
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (IllegalStateException e) {
-            APIResponse<GameStateResponse> response = APIResponse.error(409, e.getMessage());
+            APIResponse<GameStateResponse> response = APIResponse.error(409, e.getMessage());//状态异常捕获
             return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
     }
