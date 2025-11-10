@@ -1,0 +1,517 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+}
+
+/* 认证区域 */
+.auth-section {
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.auth-section h1 {
+    color: #667eea;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: #667eea;
+    border-bottom: 2px solid #667eea;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.auth-form input {
+    padding: 12px;
+    border: 2px solid #eee;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.auth-form button {
+    padding: 12px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.auth-form button:hover {
+    background: #5568d3;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 14px;
+    margin-top: 10px;
+    min-height: 20px;
+}
+
+/* 游戏区域 */
+.game-section {
+    width: 100%;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-info span {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.logout-btn {
+    padding: 8px 15px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.logout-btn:hover {
+    background: #c0392b;
+}
+
+.game-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-primary {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary:hover {
+    background: #5568d3;
+}
+
+.btn-secondary {
+    padding: 8px 15px;
+    background: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.btn-danger {
+    padding: 8px 15px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* 对话框 */
+.dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.dialog-content {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.dialog-content h2 {
+    margin-bottom: 20px;
+    color: #667eea;
+}
+
+.dialog-content label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.dialog-content input,
+.dialog-content select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 2px solid #eee;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.dialog-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+/* 游戏信息 */
+.game-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.info-item {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.info-item span:first-child {
+    color: #666;
+}
+
+.info-item span:last-child {
+    color: #667eea;
+}
+
+.game-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* 游戏棋盘 */
+.game-board-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.game-board {
+    display: inline-grid;
+    gap: 2px;
+    background: #ddd;
+    padding: 2px;
+    border-radius: 5px;
+}
+
+.cell {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #bbb;
+    background: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.1s;
+}
+
+.cell:hover {
+    background: #d0d0d0;
+}
+
+.cell.revealed {
+    background: #f5f5f5;
+    cursor: default;
+}
+
+.cell.revealed:hover {
+    background: #f5f5f5;
+}
+
+.cell.flagged {
+    background: #ffd700;
+}
+
+.cell.mine {
+    background: #e74c3c;
+    color: white;
+}
+
+.cell.number-1 { color: #0000ff; }
+.cell.number-2 { color: #008000; }
+.cell.number-3 { color: #ff0000; }
+.cell.number-4 { color: #000080; }
+.cell.number-5 { color: #800000; }
+.cell.number-6 { color: #008080; }
+.cell.number-7 { color: #000000; }
+.cell.number-8 { color: #808080; }
+
+/* 游戏消息 */
+.game-message {
+    text-align: center;
+    padding: 15px;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-message.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.game-message.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.game-message.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* 房间区域 */
+.room-section {
+    width: 100%;
+}
+
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.room-main {
+    width: 100%;
+}
+
+.room-options {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.btn-large {
+    padding: 15px 40px;
+    font-size: 18px;
+    min-width: 200px;
+}
+
+/* 房间列表 */
+.room-list-section {
+    margin-top: 30px;
+}
+
+.room-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.room-list-header h2 {
+    color: #667eea;
+    margin: 0;
+}
+
+.room-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.room-card {
+    background: #f8f9fa;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s;
+}
+
+.room-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
+.room-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.room-card-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.room-status {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.room-status.waiting {
+    background: #d4edda;
+    color: #155724;
+}
+
+.room-status.playing {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.room-card-info {
+    margin-bottom: 15px;
+}
+
+.room-info-item {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #666;
+}
+
+.room-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.no-rooms {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .game-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .game-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .game-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .cell {
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+    }
+
+    .room-options {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-large {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .room-list {
+        grid-template-columns: 1fr;
+    }
+}
+
