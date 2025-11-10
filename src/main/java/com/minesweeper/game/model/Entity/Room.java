@@ -1,11 +1,12 @@
-package com.minesweeper.game.model.Response;
+package com.minesweeper.game.model.Entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 房间响应
+ * 房间实体类
  */
-public class RoomResponse {
+public class Room {
     private String roomId;
     private String roomName;
     private String hostId;
@@ -13,20 +14,71 @@ public class RoomResponse {
     private List<String> playerIds;
     private List<String> playerUsernames;
     private Integer maxPlayers;
-    private Integer currentPlayerCount;
     private String currentGameId; // 当前游戏ID，如果有
     private String status; // WAITING, PLAYING
     private Long createdAt; // 创建时间
 
-    public RoomResponse() {
+    public Room() {
+        this.playerIds = new ArrayList<>();
+        this.playerUsernames = new ArrayList<>();
+        this.status = "WAITING";
+        this.createdAt = System.currentTimeMillis();
     }
 
-    public RoomResponse(String roomId, String roomName, String hostId, Integer maxPlayers, String status) {
+    public Room(String roomId, String roomName, String hostId, String hostUsername, Integer maxPlayers) {
+        this();
         this.roomId = roomId;
         this.roomName = roomName;
         this.hostId = hostId;
+        this.hostUsername = hostUsername;
         this.maxPlayers = maxPlayers;
-        this.status = status;
+        this.playerIds.add(hostId);
+        this.playerUsernames.add(hostUsername);
+    }
+
+    /**
+     * 添加玩家
+     */
+    public boolean addPlayer(String playerId, String playerUsername) {
+        if (playerIds.contains(playerId)) {
+            return false; // 玩家已在房间中
+        }
+        if (playerIds.size() >= maxPlayers) {
+            return false; // 房间已满
+        }
+        if (!status.equals("WAITING")) {
+            return false; // 房间不在等待状态
+        }
+        playerIds.add(playerId);
+        playerUsernames.add(playerUsername);
+        return true;
+    }
+
+    /**
+     * 移除玩家
+     */
+    public boolean removePlayer(String playerId) {
+        int index = playerIds.indexOf(playerId);
+        if (index == -1) {
+            return false;
+        }
+        playerIds.remove(index);
+        playerUsernames.remove(index);
+        return true;
+    }
+
+    /**
+     * 检查房间是否已满
+     */
+    public boolean isFull() {
+        return playerIds.size() >= maxPlayers;
+    }
+
+    /**
+     * 获取当前玩家数量
+     */
+    public Integer getCurrentPlayerCount() {
+        return playerIds.size();
     }
 
     // Getters and Setters
@@ -86,14 +138,6 @@ public class RoomResponse {
         this.maxPlayers = maxPlayers;
     }
 
-    public Integer getCurrentPlayerCount() {
-        return currentPlayerCount;
-    }
-
-    public void setCurrentPlayerCount(Integer currentPlayerCount) {
-        this.currentPlayerCount = currentPlayerCount;
-    }
-
     public String getCurrentGameId() {
         return currentGameId;
     }
@@ -118,3 +162,4 @@ public class RoomResponse {
         this.createdAt = createdAt;
     }
 }
+
