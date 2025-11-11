@@ -21,7 +21,7 @@
     </properties>
 
     <dependencies>
-        <!--服务器启动依赖-->
+        <!-- 服务器启动依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -39,6 +39,7 @@
             <version>2.2.0</version>
         </dependency>
 
+        <!-- 使用数据库连接池 -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
@@ -57,7 +58,6 @@
         </dependency>
 
         <!-- 数据库迁移工具 -->
-        <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
