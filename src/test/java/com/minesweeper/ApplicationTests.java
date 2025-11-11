@@ -2,7 +2,6 @@ package com.minesweeper;
 
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 
 // TODO 引导类
