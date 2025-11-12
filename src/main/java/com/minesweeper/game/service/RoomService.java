@@ -1,83 +1,123 @@
 package com.minesweeper.game.service;
 
-import com.minesweeper.game.model.Entity.Room;
+import com.minesweeper.game.model.Entity.RoomEntity;
+import com.minesweeper.game.model.Entity.RoomPlayerEntity;
+import com.minesweeper.game.model.Entity.UserEntity;
 import com.minesweeper.game.model.Request.CreateRoomRequest;
 import com.minesweeper.game.model.Response.JoinRoomResponse;
 import com.minesweeper.game.model.Response.RoomResponse;
+import com.minesweeper.game.repository.RoomPlayerRepository;
+import com.minesweeper.game.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
- * 房间服务类
+ * 房间服务类（使用数据库）
  */
 @Service
 public class RoomService {
-    // 使用内存存储房间数据（后续可以替换为Repository）
-    private final Map<String, Room> rooms = new ConcurrentHashMap<>();
-    private final Random random = new Random();
-
+    
+    @Autowired
+    private RoomRepository roomRepository;
+    
+    @Autowired
+    private RoomPlayerRepository roomPlayerRepository;
+    
     @Autowired
     private UserService userService;
+    
+    private final Random random = new Random();
 
     /**
      * 创建房间
      */
+    @Transactional
     public RoomResponse createRoom(CreateRoomRequest request) {
         // 验证房主是否存在
-        if (userService.getUserById(request.getHostId()) == null) {
+        UserEntity host = userService.getUserById(request.getHostId());
+        if (host == null) {
             throw new IllegalArgumentException("房主不存在");
         }
 
         // 生成房间ID
         String roomId = generateRoomId();
 
-        // 获取房主用户名
-        String hostUsername = userService.getUserById(request.getHostId()).getUsername();
-
         // 创建房间实体
-        Room room = new Room(roomId, request.getRoomName(), request.getHostId(), 
-                            hostUsername, request.getMaxPlayers());
+        RoomEntity roomEntity = new RoomEntity();
+        roomEntity.setRoomId(roomId);
+        roomEntity.setRoomName(request.getRoomName());
+        roomEntity.setHostId(request.getHostId());
+        roomEntity.setHostUsername(host.getUsername());
+        roomEntity.setMaxPlayers(request.getMaxPlayers());
+        roomEntity.setStatus("WAITING");
 
         // 保存房间
-        rooms.put(roomId, room);
+        roomEntity = roomRepository.save(roomEntity);
+
+        // 添加房主为第一个玩家
+        RoomPlayerEntity hostPlayer = new RoomPlayerEntity();
+        hostPlayer.setRoomId(roomId);
+        hostPlayer.setPlayerId(request.getHostId());
+        hostPlayer.setPlayerUsername(host.getUsername());
+        roomPlayerRepository.save(hostPlayer);
+
+        // 刷新实体以获取关联数据
+        roomEntity = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("房间创建失败"));
 
         // 转换为响应对象
-        return convertToRoomResponse(room);
+        return convertToRoomResponse(roomEntity);
     }
 
     /**
      * 加入房间
      */
+    @Transactional
     public JoinRoomResponse joinRoom(String roomId, String userId) {
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("房间不存在");
-        }
-        if (room.isFull()) {
+        // 查找房间
+        RoomEntity roomEntity = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("房间不存在"));
+        
+        // 检查房间是否已满
+        long currentCount = roomPlayerRepository.countByRoomId(roomId);
+        if (currentCount >= roomEntity.getMaxPlayers()) {
             throw new IllegalStateException("房间已满");
         }
-        if (!room.getStatus().equals("WAITING")) {
+        
+        // 检查房间状态
+        if (!roomEntity.getStatus().equals("WAITING")) {
             throw new IllegalStateException("房间不在等待状态，无法加入");
         }
 
         // 验证用户是否存在
-        if (userService.getUserById(userId) == null) {
+        UserEntity user = userService.getUserById(userId);
+        if (user == null) {
             throw new IllegalArgumentException("用户不存在");
         }
 
-        String username = userService.getUserById(userId).getUsername();
-
-        // 添加玩家
-        boolean success = room.addPlayer(userId, username);
-        if (!success) {
-            throw new IllegalStateException("加入房间失败，玩家可能已在房间中");
+        // 检查玩家是否已在房间中
+        if (roomPlayerRepository.existsByRoomIdAndPlayerId(roomId, userId)) {
+            throw new IllegalStateException("玩家已在房间中");
         }
 
+        // 添加玩家
+        RoomPlayerEntity roomPlayer = new RoomPlayerEntity();
+        roomPlayer.setRoomId(roomId);
+        roomPlayer.setPlayerId(userId);
+        roomPlayer.setPlayerUsername(user.getUsername());
+        roomPlayerRepository.save(roomPlayer);
+
+        // 刷新实体
+        roomEntity = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("房间不存在"));
+
         // 转换为响应对象
-        JoinRoomResponse response = convertToJoinRoomResponse(room);
+        JoinRoomResponse response = convertToJoinRoomResponse(roomEntity);
         response.setMessage("成功加入房间");
         return response;
     }
@@ -85,22 +125,30 @@ public class RoomService {
     /**
      * 离开房间
      */
+    @Transactional
     public void leaveRoom(String roomId, String userId) {
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("房间不存在");
-        }
+        // 查找房间
+        RoomEntity roomEntity = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("房间不存在"));
 
-        room.removePlayer(userId);
+        // 移除玩家
+        roomPlayerRepository.deleteByRoomIdAndPlayerId(roomId, userId);
 
-        // 如果房间为空，删除房间
-        if (room.getPlayerIds().isEmpty()) {
-            rooms.remove(roomId);
+        // 检查房间是否为空
+        long remainingCount = roomPlayerRepository.countByRoomId(roomId);
+        if (remainingCount == 0) {
+            // 删除房间
+            roomRepository.deleteById(roomId);
         } else {
             // 如果房主离开，转移房主权限给第一个玩家
-            if (room.getHostId().equals(userId)) {
-                room.setHostId(room.getPlayerIds().get(0));
-                room.setHostUsername(room.getPlayerUsernames().get(0));
+            if (roomEntity.getHostId().equals(userId)) {
+                List<RoomPlayerEntity> remainingPlayers = roomPlayerRepository.findByRoomId(roomId);
+                if (!remainingPlayers.isEmpty()) {
+                    RoomPlayerEntity newHost = remainingPlayers.get(0);
+                    roomEntity.setHostId(newHost.getPlayerId());
+                    roomEntity.setHostUsername(newHost.getPlayerUsername());
+                    roomRepository.save(roomEntity);
+                }
             }
         }
     }
@@ -109,20 +157,19 @@ public class RoomService {
      * 获取房间信息
      */
     public RoomResponse getRoom(String roomId) {
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("房间不存在");
-        }
-        return convertToRoomResponse(room);
+        RoomEntity roomEntity = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("房间不存在"));
+        return convertToRoomResponse(roomEntity);
     }
 
     /**
      * 获取所有房间列表
      */
     public List<RoomResponse> getAllRooms() {
+        List<RoomEntity> rooms = roomRepository.findAll();
         List<RoomResponse> roomList = new ArrayList<>();
-        for (Room room : rooms.values()) {
-            roomList.add(convertToRoomResponse(room));
+        for (RoomEntity roomEntity : rooms) {
+            roomList.add(convertToRoomResponse(roomEntity));
         }
         return roomList;
     }
@@ -130,49 +177,69 @@ public class RoomService {
     /**
      * 设置房间的游戏ID
      */
+    @Transactional
     public void setRoomGame(String roomId, String gameId) {
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("房间不存在");
-        }
-        room.setCurrentGameId(gameId);
-        room.setStatus("PLAYING");
+        RoomEntity roomEntity = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("房间不存在"));
+        roomEntity.setCurrentGameId(gameId);
+        roomEntity.setStatus("PLAYING");
+        roomRepository.save(roomEntity);
     }
 
     /**
-     * 将Room实体转换为RoomResponse
+     * 将RoomEntity转换为RoomResponse
      */
-    private RoomResponse convertToRoomResponse(Room room) {
+    private RoomResponse convertToRoomResponse(RoomEntity roomEntity) {
         RoomResponse response = new RoomResponse();
-        response.setRoomId(room.getRoomId());
-        response.setRoomName(room.getRoomName());
-        response.setHostId(room.getHostId());
-        response.setHostUsername(room.getHostUsername());
-        response.setPlayerIds(new ArrayList<>(room.getPlayerIds()));
-        response.setPlayerUsernames(new ArrayList<>(room.getPlayerUsernames()));
-        response.setMaxPlayers(room.getMaxPlayers());
-        response.setCurrentPlayerCount(room.getCurrentPlayerCount());
-        response.setCurrentGameId(room.getCurrentGameId());
-        response.setStatus(room.getStatus());
-        response.setCreatedAt(room.getCreatedAt());
+        response.setRoomId(roomEntity.getRoomId());
+        response.setRoomName(roomEntity.getRoomName());
+        response.setHostId(roomEntity.getHostId());
+        response.setHostUsername(roomEntity.getHostUsername());
+        response.setMaxPlayers(roomEntity.getMaxPlayers());
+        response.setCurrentGameId(roomEntity.getCurrentGameId());
+        response.setStatus(roomEntity.getStatus());
+        response.setCreatedAt(roomEntity.getCreatedAt());
+        
+        // 获取玩家列表
+        List<RoomPlayerEntity> roomPlayers = roomPlayerRepository.findByRoomId(roomEntity.getRoomId());
+        List<String> playerIds = new ArrayList<>();
+        List<String> playerUsernames = new ArrayList<>();
+        for (RoomPlayerEntity roomPlayer : roomPlayers) {
+            playerIds.add(roomPlayer.getPlayerId());
+            playerUsernames.add(roomPlayer.getPlayerUsername());
+        }
+        response.setPlayerIds(playerIds);
+        response.setPlayerUsernames(playerUsernames);
+        response.setCurrentPlayerCount(playerIds.size());
+        
         return response;
     }
 
     /**
-     * 将Room实体转换为JoinRoomResponse
+     * 将RoomEntity转换为JoinRoomResponse
      */
-    private JoinRoomResponse convertToJoinRoomResponse(Room room) {
+    private JoinRoomResponse convertToJoinRoomResponse(RoomEntity roomEntity) {
         JoinRoomResponse response = new JoinRoomResponse();
-        response.setRoomId(room.getRoomId());
-        response.setRoomName(room.getRoomName());
-        response.setHostId(room.getHostId());
-        response.setHostUsername(room.getHostUsername());
-        response.setPlayerIds(new ArrayList<>(room.getPlayerIds()));
-        response.setPlayerUsernames(new ArrayList<>(room.getPlayerUsernames()));
-        response.setMaxPlayers(room.getMaxPlayers());
-        response.setCurrentPlayerCount(room.getCurrentPlayerCount());
-        response.setCurrentGameId(room.getCurrentGameId());
-        response.setStatus(room.getStatus());
+        response.setRoomId(roomEntity.getRoomId());
+        response.setRoomName(roomEntity.getRoomName());
+        response.setHostId(roomEntity.getHostId());
+        response.setHostUsername(roomEntity.getHostUsername());
+        response.setMaxPlayers(roomEntity.getMaxPlayers());
+        response.setCurrentGameId(roomEntity.getCurrentGameId());
+        response.setStatus(roomEntity.getStatus());
+        
+        // 获取玩家列表
+        List<RoomPlayerEntity> roomPlayers = roomPlayerRepository.findByRoomId(roomEntity.getRoomId());
+        List<String> playerIds = new ArrayList<>();
+        List<String> playerUsernames = new ArrayList<>();
+        for (RoomPlayerEntity roomPlayer : roomPlayers) {
+            playerIds.add(roomPlayer.getPlayerId());
+            playerUsernames.add(roomPlayer.getPlayerUsername());
+        }
+        response.setPlayerIds(playerIds);
+        response.setPlayerUsernames(playerUsernames);
+        response.setCurrentPlayerCount(playerIds.size());
+        
         return response;
     }
 
@@ -186,7 +253,11 @@ public class RoomService {
     /**
      * 删除房间
      */
+    @Transactional
     public void deleteRoom(String roomId) {
-        rooms.remove(roomId);
+        // 先删除所有玩家关联
+        roomPlayerRepository.deleteByRoomId(roomId);
+        // 再删除房间
+        roomRepository.deleteById(roomId);
     }
 }
